@@ -47,12 +47,13 @@ var PluginInfoProvider = require('../PluginInfoProvider');
  *
  * * platform: String that defines a platform name.
  */
-function PlatformApiPoly(platform, platformRootDir) {
+function PlatformApiPoly(platform, platformRootDir, events) {
     if (!platform) throw new CordovaError('\'platform\' argument is missing');
     if (!platformRootDir) throw new CordovaError('platformRootDir argument is missing');
 
     this.root = platformRootDir;
     this.platform = platform;
+    this.events = events || require('../events');
 
     if (!(platform in knownPlatforms))
         throw new CordovaError('Unknown platform ' + platform);
@@ -188,7 +189,7 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     // Otherwise save whatever is there as defaults so it can be
     // restored or copy project config into platform if none exists.
     if (fs.existsSync(defaultConfig)) {
-        // events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
+        this.events.emit('verbose', 'Generating config.xml from defaults for platform "' + this.platform + '"');
         shell.cp('-f', defaultConfig, ownConfig);
     } else if (fs.existsSync(ownConfig)) {
         shell.cp('-f', ownConfig, defaultConfig);
@@ -196,8 +197,9 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
         shell.cp('-f', sourceCfg.path, ownConfig);
     }
 
-    this._config = new ConfigParser(ownConfig);
+    this._munger.reapply_global_munge().save_all();
 
+    this._config = new ConfigParser(ownConfig);
     xmlHelpers.mergeXml(cordovaProject.projectConfig.doc.getroot(),
         this._config.doc.getroot(), this.platform, true);
     // CB-6976 Windows Universal Apps. For smooth transition and to prevent mass api failures
@@ -211,10 +213,8 @@ PlatformApiPoly.prototype.prepare = function (cordovaProject) {
     // Update own www dir with project's www assets and plugins' assets and js-files
     this._parser.update_www(cordovaProject.locations.www);
 
-    this._munger.reapply_global_munge().save_all();
-
     // update project according to config.xml changes.
-    return this._parser.update_project(cordovaProject.projectConfig);
+    return this._parser.update_project(this._config);
 };
 
 /**
