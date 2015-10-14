@@ -24,17 +24,18 @@ var unorm = require('unorm');
 var shell = require('shelljs');
 var semver = require('semver');
 
-var superspawn = require('../cordova/superspawn');
-var xmlHelpers = require('../util/xml-helpers');
 var common = require('../plugman/platforms/common');
+
+var superspawn = require('cordova-common').superspawn;
+var xmlHelpers = require('cordova-common').xmlHelpers;
 var knownPlatforms = require('./platforms');
-var CordovaError = require('../CordovaError');
-var PluginInfo = require('../PluginInfo');
-var ConfigParser = require('../configparser/ConfigParser');
-var PlatformJson = require('../plugman/util/PlatformJson');
-var ActionStack = require('../plugman/util/action-stack');
-var PlatformMunger = require('../plugman/util/config-changes').PlatformMunger;
-var PluginInfoProvider = require('../PluginInfoProvider');
+var CordovaError = require('cordova-common').CordovaError;
+var PluginInfo = require('cordova-common').PluginInfo;
+var ConfigParser = require('cordova-common').ConfigParser;
+var PlatformJson = require('cordova-common').PlatformJson;
+var ActionStack = require('cordova-common').ActionStack;
+var PlatformMunger = require('cordova-common').ConfigChanges.PlatformMunger;
+var PluginInfoProvider = require('cordova-common').PluginInfoProvider;
 
 /**
  * Class, that acts as abstraction over particular platform. Encapsulates the
@@ -53,7 +54,7 @@ function PlatformApiPoly(platform, platformRootDir, events) {
 
     this.root = platformRootDir;
     this.platform = platform;
-    this.events = events || require('../events');
+    this.events = events || require('cordova-common').events;
 
     if (!(platform in knownPlatforms))
         throw new CordovaError('Unknown platform ' + platform);
@@ -309,10 +310,7 @@ PlatformApiPoly.prototype.removePlugin = function (plugin, uninstallOptions) {
     plugin.getFilesAndFrameworks(this.platform)
         .concat(plugin.getAssets(this.platform))
         .concat(plugin.getJsModules(this.platform))
-    .filter(function (item) {
-        // CB-5238 Skip (don't uninstall) non custom frameworks.
-        return !(item.itemType == 'framework' && !item.custom);
-    }).forEach(function(item) {
+    .forEach(function(item) {
         actions.push(actions.createAction(
             self._getUninstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile],
             self._getInstaller(item.itemType), [item, plugin.dir, plugin.id, uninstallOptions, projectFile]));

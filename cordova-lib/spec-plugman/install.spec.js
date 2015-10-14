@@ -20,11 +20,11 @@
 /* jshint sub:true */
 
 var install = require('../src/plugman/install'),
-    actions = require('../src/plugman/util/action-stack'),
-    xmlHelpers = require('../src/util/xml-helpers'),
+    actions = require('cordova-common').ActionStack,
+    xmlHelpers = require('cordova-common').xmlHelpers,
     et      = require('elementtree'),
-    PlatformJson = require('../src/plugman/util/PlatformJson'),
-    events  = require('../src/events'),
+    PlatformJson = require('cordova-common').PlatformJson,
+    events = require('cordova-common').events,
     plugman = require('../src/plugman/plugman'),
     platforms = require('../src/plugman/platforms/common'),
     common  = require('./common'),
@@ -57,7 +57,7 @@ var install = require('../src/plugman/install'),
     },
     promise,
     results = {},
-    superspawn = require('../src/cordova/superspawn');
+    superspawn = require('cordova-common').superspawn;
 
 
 // Pre-crete the temp dir, without it the test fails.
@@ -223,6 +223,20 @@ describe('install', function() {
             });
             waitsFor(function() { return done; }, 'install promise never resolved', 200);
             runs(function() {
+                expect(done).toBe(true);
+                expect(fetchSpy).toHaveBeenCalled();
+            });
+        });
+        it('should call fetch and convert oldID to newID', function() {
+            fetchSpy.andReturn( Q( plugins['org.test.plugins.dummyplugin'] ) );
+            spyOn(fs, 'existsSync').andCallFake( fake['existsSync']['noPlugins'] );
+            var emit = spyOn(events, 'emit');
+            runs(function() {
+                installPromise(install('android', project, 'org.apache.cordova.device' ));
+            });
+            waitsFor(function() { return done; }, 'install promise never resolved', 200);
+            runs(function() {
+                expect(emit.calls[0].args[1]).toBe('Notice: org.apache.cordova.device has been automatically converted to cordova-plugin-device and fetched from npm. This is due to our old plugins registry shutting down.');
                 expect(done).toBe(true);
                 expect(fetchSpy).toHaveBeenCalled();
             });
