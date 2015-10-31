@@ -18,7 +18,17 @@
 # under the License.
 #
 -->
-# Cordova-lib Release Notes
+# Cordova-common Release Notes
 
-### 0.1.0 (Aug 25, 2015)
-* Initial release
+### 1.0.0 (Oct 29, 2015)
+
+* CB-9890 Documents cordova-common
+* CB-9598 Correct cordova-lib -> cordova-common in README
+* Pick ConfigParser changes from apache@0c3614e
+* CB-9743 Removes system frameworks handling from ConfigChanges
+* CB-9598 Cleans out code which has been moved to `cordova-common`
+* Pick ConfigParser changes from apache@ddb027b
+* Picking CordovaError changes from apache@a3b1fca
+* CB-9598 Adds tests and fixtures based on existing cordova-lib ones
+* CB-9598 Initial implementation for cordova-common
+
